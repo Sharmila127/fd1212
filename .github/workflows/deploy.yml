@@ -1,4 +1,4 @@
-name: Auto Deploy Frontend
+name: Deploy Frontend to S3
 
 on:
   push:
@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  detect-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -17,32 +17,31 @@ jobs:
       - name: Detect frontend folder
         id: detect
         run: |
-          echo "Searching for frontend folder..."
-          if [ -d "frontend" ]; then
+          if [ -f package.json ]; then
+            echo "folder=." >> $GITHUB_OUTPUT
+          elif [ -d frontend ]; then
             echo "folder=frontend" >> $GITHUB_OUTPUT
-          elif [ -d "fd1212" ]; then
+          elif [ -d fd1212 ]; then
             echo "folder=fd1212" >> $GITHUB_OUTPUT
-          elif [ -d "fd1212-main/frontend" ]; then
-            echo "folder=fd1212-main/frontend" >> $GITHUB_OUTPUT
           else
-            echo "❌ ERROR: Frontend folder not found!"
+            echo "❌ No frontend folder found!"
             exit 1
           fi
 
-      - name: Show detected folder
-        run: echo "Frontend located at: ${{ steps.detect.outputs.folder }}"
+      - name: Print detected path
+        run: echo "Frontend folder = ${{ steps.detect.outputs.folder }}"
 
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           cd ${{ steps.detect.outputs.folder }}
           npm install
 
-      - name: Build project
+      - name: Build Project
         run: |
           cd ${{ steps.detect.outputs.folder }}
           npm run build
@@ -55,5 +54,14 @@ jobs:
           AWS_S3_BUCKET: ${{ secrets.S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ap-south-1
+          AWS_REGION: ${{ secrets.AWS_REGION }}
           SOURCE_DIR: ${{ steps.detect.outputs.folder }}/dist
+
+      - name: Invalidate CloudFront Cache
+        uses: chetan/invalidate-cloudfront-action@v2
+        env:
+          DISTRIBUTION: ${{ secrets.CLOUDFRONT_ID }}
+          PATHS: "/*"
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
