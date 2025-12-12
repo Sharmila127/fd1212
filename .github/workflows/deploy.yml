@@ -9,13 +9,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Detect frontend folder
       - name: Detect frontend folder
         id: detect
         run: |
@@ -29,39 +27,12 @@ jobs:
             echo "❌ No frontend folder found!"
             exit 1
 
-      # Step 3: Print detected path
       - name: Print detected path
         run: echo "Frontend folder = ${{ steps.detect.outputs.folder }}"
 
-      # Step 4: Setup Node.js
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      # Step 5: Install dependencies
       - name: Install dependencies
-        run: |
-          cd ${{ steps.detect.outputs.folder }}
-          npm install
-
-      # Step 6: Build project
-      - name: Build project
-        run: |
-          cd ${{ steps.detect.outputs.folder }}
-          npm run build
-
-      # Step 7: Deploy to S3 (using latest stable s3-sync-action)
-      - name: Deploy to S3
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --delete
-        env:
-          AWS_S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          SOURCE_DIR: ${{ steps.detect.outputs.folder }}/dist
-
-      # Step 8: Invalidate CloudFront cache
-      - name: Invalidate Cloud
