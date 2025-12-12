@@ -6,13 +6,23 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:3001/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    alert(JSON.stringify(data));
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_CERTIFICATE}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (data.token) {
+        localStorage.setItem("jwtToken", data.token);
+        alert("Login successful!");
+      } else {
+        alert("Login failed: " + JSON.stringify(data));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error connecting to backend");
+    }
   };
 
   return (
