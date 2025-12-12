@@ -9,7 +9,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -47,7 +47,7 @@ jobs:
           npm run build
 
       - name: Deploy to S3
-        uses: jakejarvis/s3-sync-action@master
+        uses: jakejarvis/s3-sync-action@v0.6.0
         with:
           args: --delete
         env:
@@ -59,9 +59,10 @@ jobs:
 
       - name: Invalidate CloudFront Cache
         uses: chetan/invalidate-cloudfront-action@v2
+        with:
+          distribution: ${{ secrets.CLOUDFRONT_ID }}
+          paths: "/*"
         env:
-          DISTRIBUTION: ${{ secrets.CLOUDFRONT_ID }}
-          PATHS: "/*"
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
