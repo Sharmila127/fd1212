@@ -1,5 +1,5 @@
 import React from "react";
-import Login from "./login"; // make sure it matches the filename exactly
+import Login from "./Login"; // make sure it matches the filename exactly
 
 function App() {
   return (
