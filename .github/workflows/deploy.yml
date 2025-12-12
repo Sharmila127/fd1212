@@ -26,7 +26,6 @@ jobs:
           else
             echo "❌ No frontend folder found!"
             exit 1
-          fi
 
       - name: Print detected path
         run: echo "Frontend folder = ${{ steps.detect.outputs.folder }}"
@@ -47,7 +46,7 @@ jobs:
           npm run build
 
       - name: Deploy to S3
-        uses: jakejarvis/s3-sync-action@v0.6.0
+        uses: jakejarvis/s3-sync-action@v0.6.1
         with:
           args: --delete
         env:
@@ -55,14 +54,3 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          SOURCE_DIR: ${{ steps.detect.outputs.folder }}/dist
-
-      - name: Invalidate CloudFront Cache
-        uses: chetan/invalidate-cloudfront-action@v2
-        with:
-          distribution: ${{ secrets.CLOUDFRONT_ID }}
-          paths: "/*"
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
