@@ -1,5 +1,5 @@
 import React from "react";
-import Login from "./login"; // make sure filename is lowercase 'login.jsx'
+import Login from "./login"; // Must match login.jsx exactly
 
 function App() {
   return (
