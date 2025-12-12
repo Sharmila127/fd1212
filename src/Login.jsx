@@ -15,26 +15,17 @@ function Login() {
         body: JSON.stringify({ email, password }),
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        alert(`Login failed: ${errorData.error || res.statusText}`);
-        setLoading(false);
-        return;
-      }
-
       const data = await res.json();
 
-      // Save JWT token in localStorage
-      if (data.token) {
+      if (res.ok && data.token) {
         localStorage.setItem("jwtToken", data.token);
         alert("Login successful!");
-        // Optionally redirect user to dashboard
-        // window.location.href = "/dashboard";
+        // redirect to another page if needed
       } else {
-        alert("Login failed: Token not received");
+        alert("Login failed: " + (data.message || JSON.stringify(data)));
       }
     } catch (err) {
-      console.error("Error connecting to backend:", err);
+      console.error(err);
       alert("Error connecting to backend");
     } finally {
       setLoading(false);
@@ -43,7 +34,6 @@ function Login() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>Login</h2>
       <input
         type="email"
         placeholder="Email"
