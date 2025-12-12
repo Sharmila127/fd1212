@@ -11,56 +11,65 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 2️⃣ Detect frontend folder
       - name: Detect frontend folder
         id: detect
         run: |
           if [ -f package.json ]; then
             echo "folder=." >> $GITHUB_OUTPUT
+          elif [ -d frontend ]; then
+            echo "folder=frontend" >> $GITHUB_OUTPUT
           elif [ -d fd1212 ]; then
             echo "folder=fd1212" >> $GITHUB_OUTPUT
           else
             echo "❌ No frontend folder found!"
             exit 1
-          fi
 
+      # 3️⃣ Print detected path
       - name: Print detected path
         run: echo "Frontend folder = ${{ steps.detect.outputs.folder }}"
 
-      - name: Setup Node.js
+      # 4️⃣ Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      - name: Install dependencies
+      # 5️⃣ Install dependencies
+      - name: Install Dependencies
         run: |
           cd ${{ steps.detect.outputs.folder }}
           npm install
 
-      - name: Build project
+      # 6️⃣ Build project
+      - name: Build Project
         run: |
           cd ${{ steps.detect.outputs.folder }}
           npm run build
 
-      - name: Sync to S3
+      # 7️⃣ Deploy to S3
+      - name: Deploy to S3
         uses: aws-actions/s3-sync@v2
         with:
           source-dir: ${{ steps.detect.outputs.folder }}/dist
-          destination-bucket: ${{ secrets.S3_BUCKET }}
+          bucket: ${{ secrets.S3_BUCKET }}
           delete: true
         env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
 
-      - name: Invalidate CloudFront cache
+      # 8️⃣ Invalidate CloudFront cache
+      - name: Invalidate CloudFront Cache
         uses: aws-actions/cloudfront-invalidate@v2
         with:
           distribution-id: ${{ secrets.CLOUDFRONT_ID }}
           paths: "/*"
         env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
